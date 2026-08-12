@@ -2,9 +2,9 @@ name: TPM CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, caliptra-main-14 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, caliptra-main-14 ]
   workflow_dispatch:
 
 env:

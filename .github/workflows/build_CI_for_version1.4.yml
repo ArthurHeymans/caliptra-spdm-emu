@@ -2,9 +2,9 @@ name: Version 1.4 with Certificates
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, caliptra-main-14 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, caliptra-main-14 ]
   workflow_dispatch:
 
 concurrency:
@@ -57,6 +57,23 @@ jobs:
           sleep 5s
           ./spdm_requester_emu --ver 1.4 >requester.log
 
+      - name: Responder_validator_Test
+        run: |
+          cd build/bin
+          # Run the SPDM Responder Validator conformance suite against the emu
+          # responder negotiated at SPDM 1.4. Mutual auth is disabled because the
+          # validator's KEY_EXCHANGE_RSP cases do not expect the responder to
+          # request it, but spdm_responder_emu asks for it by default.
+          ./spdm_responder_emu --ver 1.4 --basic_mut_auth NO --mut_auth NO &
+          sleep 5s
+          ./spdm_device_validator_sample --ver 1.4
+          # spdm_device_validator_sample exits 0 even when assertions fail; the
+          # verdict is only recorded in test.log, so check it explicitly.
+          if grep -E 'test suite \(.*\) - pass: [0-9]+, fail: [1-9][0-9]*' test.log; then
+            echo "SPDM 1.4 responder conformance suite reported failures"
+            exit 1
+          fi
+
   gcc_openssl_build:
     runs-on: ubuntu-latest
     steps:
@@ -87,6 +104,23 @@ jobs:
           ./spdm_responder_emu --ver 1.4 &
           sleep 5s
           ./spdm_requester_emu --ver 1.4 >requester.log
+
+      - name: Responder_validator_Test
+        run: |
+          cd build/bin
+          # Run the SPDM Responder Validator conformance suite against the emu
+          # responder negotiated at SPDM 1.4. Mutual auth is disabled because the
+          # validator's KEY_EXCHANGE_RSP cases do not expect the responder to
+          # request it, but spdm_responder_emu asks for it by default.
+          ./spdm_responder_emu --ver 1.4 --basic_mut_auth NO --mut_auth NO &
+          sleep 5s
+          ./spdm_device_validator_sample --ver 1.4
+          # spdm_device_validator_sample exits 0 even when assertions fail; the
+          # verdict is only recorded in test.log, so check it explicitly.
+          if grep -E 'test suite \(.*\) - pass: [0-9]+, fail: [1-9][0-9]*' test.log; then
+            echo "SPDM 1.4 responder conformance suite reported failures"
+            exit 1
+          fi
 
   VS2019_mbedtls_build:
     runs-on: windows-latest

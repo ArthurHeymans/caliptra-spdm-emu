@@ -2,9 +2,9 @@ name: FIPS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, caliptra-main-14 ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, caliptra-main-14 ]
   workflow_dispatch:
 
 concurrency:
@@ -60,9 +60,17 @@ jobs:
       - name: Responder_validator_Test
         run: |
           cd build/bin
-          ./spdm_responder_emu &
+          # Disable mutual auth: the validator's KEY_EXCHANGE_RSP cases do not expect
+          # the responder to request it, but spdm_responder_emu asks for it by default.
+          ./spdm_responder_emu --basic_mut_auth NO --mut_auth NO &
           sleep 5s
           ./spdm_device_validator_sample
+          # spdm_device_validator_sample exits 0 even when assertions fail; the
+          # verdict is only recorded in test.log, so check it explicitly.
+          if grep -E 'test suite \(.*\) - pass: [0-9]+, fail: [1-9][0-9]*' test.log; then
+            echo "SPDM responder conformance suite reported failures"
+            exit 1
+          fi
       - name: Test_RECORD_TRANSCRIPT_DATA_consistent
         # open LIBSPDM_RECORD_TRANSCRIPT_DATA_SUPPORT flag
         # mkdir build1 folder, gen spdm_requester_emu.exe and spdm_responder_emu.exe
@@ -122,9 +130,17 @@ jobs:
       - name: Responder_validator_Test
         run: |
           cd build/bin
-          ./spdm_responder_emu &
+          # Disable mutual auth: the validator's KEY_EXCHANGE_RSP cases do not expect
+          # the responder to request it, but spdm_responder_emu asks for it by default.
+          ./spdm_responder_emu --basic_mut_auth NO --mut_auth NO &
           sleep 5s
           ./spdm_device_validator_sample
+          # spdm_device_validator_sample exits 0 even when assertions fail; the
+          # verdict is only recorded in test.log, so check it explicitly.
+          if grep -E 'test suite \(.*\) - pass: [0-9]+, fail: [1-9][0-9]*' test.log; then
+            echo "SPDM responder conformance suite reported failures"
+            exit 1
+          fi
       - name: Test_RECORD_TRANSCRIPT_DATA_consistent
         # open LIBSPDM_RECORD_TRANSCRIPT_DATA_SUPPORT flag
         # mkdir build1 folder, gen spdm_requester_emu.exe and spdm_responder_emu.exe
