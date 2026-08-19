@@ -143,10 +143,9 @@ bool platform_client_routine(uint16_t port_number)
             goto done;
         }
     }
-    /* Skip session/key-exchange — we only need measurements for attestation. */
+    /* The Caliptra requester build is measurement-only for attestation. */
     result = true;
-    goto done;
-#endif /*LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP*/
+#else
 
 #if LIBSPDM_ENABLE_CAPABILITY_MEL_CAP
     if (((m_exe_connection & EXE_CONNECTION_MEL) != 0) && (m_use_version >= SPDM_MESSAGE_VERSION_13))
@@ -281,6 +280,7 @@ bool platform_client_routine(uint16_t port_number)
         }
 #endif /*(LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP || LIBSPDM_ENABLE_CAPABILITY_PSK_CAP)*/
     }
+#endif /*LIBSPDM_ENABLE_CAPABILITY_MEAS_CAP*/
     /* Do test - end*/
 
     result = true;
